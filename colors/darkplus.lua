@@ -114,7 +114,7 @@ local colors = {
 	error = "#f48771",
 	warning = "#cca700",
 	info = "#75beff",
-	hint = "#eeeeeeb3",
+	hint = "#eeeeb3",
 
 	-- Diff
 	diff_add = "#487e02",
