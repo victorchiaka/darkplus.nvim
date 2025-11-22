@@ -586,63 +586,25 @@ hl("@storageclass.python", { fg = colors.keyword_function })
 hl("@function.call.python", { fg = colors.function_name })
 hl("@constructor.call.python", { fg = colors.function_name })
 
--- Aggressive autocommand that uses multiple strategies
-vim.api.nvim_create_autocmd({ "FileType", "BufEnter", "BufWinEnter" }, {
+-- PYTHON FIX
+hl("PythonClassKeyword", { fg = "#569cd6" })
+hl("PythonImportedName", { fg = "#dcdcaa" })
+
+vim.api.nvim_create_autocmd("FileType", {
 	pattern = "python",
 	callback = function(ev)
-		local buf = ev.buf
-
-		-- Strategy 1: Override via vim.treesitter.highlighter
 		vim.defer_fn(function()
-			if not vim.api.nvim_buf_is_valid(buf) then
+			if not vim.api.nvim_buf_is_valid(ev.buf) then
 				return
 			end
-
-			-- Get the highlighter for this buffer
-			local ok, ts_hl = pcall(require, "vim.treesitter.highlighter")
-			if ok and ts_hl.active and ts_hl.active[buf] then
-				-- Force re-highlight with our custom groups
-				pcall(ts_hl.active[buf].tree.parse, ts_hl.active[buf].tree)
-			end
-		end, 100)
-
-		-- Strategy 2: Direct syntax override (most reliable)
-		vim.defer_fn(function()
-			if not vim.api.nvim_buf_is_valid(buf) then
-				return
-			end
-
-			vim.api.nvim_buf_call(buf, function()
-				-- Clear any conflicting syntax
+			vim.api.nvim_buf_call(ev.buf, function()
 				vim.cmd([[
-					syntax clear pythonStatement
-					
-					" Match 'class' keyword specifically
-					syntax keyword PythonClassKeyword class
-					highlight link PythonClassKeyword @keyword.class.python
-					
-					" Match 'def' and 'async def' specifically  
-					syntax keyword PythonDefKeyword def async
-					highlight link PythonDefKeyword @keyword.coroutine.python
-					
-					" Try to match imported names (this is tricky)
-					syntax match PythonImportedName /\(from\s\+[a-zA-Z0-9_.]\+\s\+import\s\+\)\@<=[a-zA-Z0-9_]\+/
-					highlight link PythonImportedName @function.imported.python
+					syntax keyword PythonClassKeyword class contained containedin=ALL
+					highlight! PythonClassKeyword guifg=#569cd6
+					syntax match PythonImportedName "\v(import\s+)@<=[A-Za-z_][A-Za-z0-9_]*" contained containedin=ALL  
+					highlight! PythonImportedName guifg=#dcdcaa
 				]])
 			end)
-		end, 200)
-
-		-- Strategy 3: Set buffer-local highlight overrides
-		vim.defer_fn(function()
-			if not vim.api.nvim_buf_is_valid(buf) then
-				return
-			end
-
-			-- Directly set highlight for this buffer
-			vim.api.nvim_set_hl(0, "@keyword.class.python", { fg = "#569cd6" })
-			vim.api.nvim_set_hl(0, "@keyword.function.python", { fg = "#569cd6" })
-			vim.api.nvim_set_hl(0, "@keyword.coroutine.python", { fg = "#569cd6" })
-			vim.api.nvim_set_hl(0, "@function.imported.python", { fg = "#dcdcaa" })
-		end, 250)
+		end, 100)
 	end,
 })
