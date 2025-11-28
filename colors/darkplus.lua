@@ -4,15 +4,17 @@ if vim.fn.exists("syntax_on") then
 	vim.cmd("syntax reset")
 end
 
+local function hl(group, opts)
+	vim.api.nvim_set_hl(0, group, opts)
+end
+
 vim.o.termguicolors = true
 vim.g.colors_name = "darkplus"
 
 local colors = {
-	-- Background & Foreground
 	bg = "#1e1e1e",
 	fg = "#d4d4d4",
 
-	-- UI Elements
 	bg_dark = "#252526",
 	bg_lighter = "#2d2d30",
 	bg_highlight = "#2a2d2e",
@@ -26,95 +28,79 @@ local colors = {
 	line_number = "#858585",
 	line_number_active = "#c6c6c6",
 
-	-- Status & Tabs
 	statusline_bg = "#252526",
 	statusline_fg = "#ffffff",
 	tabline_bg = "#2d2d2d",
 
-	-- EXACT Syntax Colors from VS Code Dark+
-	comment = "#6a9955", -- Green comments
+	comment = "#6a9955",
 	special_comment = "#dcdcaa", -- Yellow/gold for TODO/FIXME/NOTE
 
-	-- Keywords - Pink/Purple
 	keyword = "#c586c0", -- import, from, const, let, var, if, for, etc.
 	keyword_control = "#c586c0", -- return, break, continue
 	keyword_function = "#569cd6", -- function, def, async, class (blue!)
+	keyword_operator = "#569cd6", -- function, def, async, class (blue!)
 
-	-- Strings & Characters
-	string = "#ce9178", -- Orange/salmon strings
-	string_escape = "#d7ba7d", -- Gold for escape sequences
+	string = "#ce9178",
+	string_escape = "#d7ba7d",
 	char = "#ce9178",
 
-	-- Numbers & Booleans
-	number = "#b5cea8", -- Light green numbers
-	boolean = "#569cd6", -- Blue for true/false/nil/None
-	null = "#569cd6", -- Blue for null/undefined/None
+	number = "#b5cea8",
+	boolean = "#569cd6",
+	null = "#569cd6",
 
-	-- Functions & Methods
-	function_name = "#dcdcaa", -- Yellow/gold for function declarations
-	function_call = "#dcdcaa", -- Yellow for function calls
-	method = "#dcdcaa", -- Yellow for methods
+	function_name = "#dcdcaa",
+	function_call = "#dcdcaa",
+	method = "#dcdcaa",
 
-	-- Types & Classes
-	type = "#4ec9b0", -- Teal/cyan for types
-	class = "#4ec9b0", -- Teal for class names
-	interface = "#4ec9b0", -- Teal for interfaces
-	enum = "#4ec9b0", -- Teal for enums
-	type_builtin = "#569cd6", -- Blue for built-in types (string, number, etc.)
+	type = "#4ec9b0",
+	class = "#4ec9b0",
+	interface = "#4ec9b0",
+	enum = "#4ec9b0",
+	type_builtin = "#569cd6",
 
-	-- Variables & Parameters
-	variable = "#9cdcfe", -- Light blue for variables
-	parameter = "#9cdcfe", -- Light blue for parameters
-	property = "#9cdcfe", -- Light blue for object properties
-	field = "#9cdcfe", -- Light blue for fields
+	variable = "#9cdcfe",
+	parameter = "#9cdcfe",
+	property = "#9cdcfe",
+	field = "#9cdcfe",
 
-	-- Unused property
 	unused_variable = "#546d7a",
 
-	-- Constants & Enums
-	constant = "#4fc1ff", -- Bright cyan for constants
-	enum_member = "#4fc1ff", -- Bright cyan for enum members
+	constant = "#4fc1ff",
+	enum_member = "#4fc1ff",
 
-	-- Operators & Punctuation
-	operator = "#d4d4d4", -- White/light gray
-	punctuation = "#d4d4d4", -- White/light gray
-	bracket = "#ffd700", -- Gold for brackets in some contexts
+	operator = "#d4d4d4",
+	punctuation = "#d4d4d4",
+	bracket = "#ffd700",
 
-	-- Special
-	decorator = "#dcdcaa", -- Yellow for decorators (@decorator)
-	attribute = "#9cdcfe", -- Light blue for attributes
-	label = "#c586c0", -- Pink for labels
+	decorator = "#dcdcaa",
+	attribute = "#9cdcfe",
+	label = "#c586c0",
 
 	-- Markup (HTML/JSX/XML/Vue)
 	tag = "#569cd6", -- Blue for tag names (<div>, <template>)
-	tag_builtin = "#569cd6", -- Blue for built-in tags
-	tag_attribute = "#9cdcfe", -- Light blue for attributes (class, id, etc.)
-	tag_delimiter = "#808080", -- Gray for < > /
+	tag_builtin = "#569cd6",
+	tag_attribute = "#9cdcfe",
+	tag_delimiter = "#808080",
 
-	-- CSS/SCSS
-	css_class = "#d7ba7d", -- Gold for CSS class selectors
-	css_id = "#d7ba7d", -- Gold for CSS id selectors
-	css_tag = "#d7ba7d", -- Gold for CSS tag selectors
-	css_property = "#9cdcfe", -- Light blue for CSS properties
-	css_value = "#ce9178", -- Orange for CSS values
-	css_unit = "#b5cea8", -- Light green for units
-	css_function = "#dcdcaa", -- Yellow for CSS functions
-	css_at_rule = "#c586c0", -- Pink for @apply, @media, etc.
+	css_class = "#d7ba7d",
+	css_id = "#d7ba7d",
+	css_tag = "#d7ba7d",
+	css_property = "#9cdcfe",
+	css_value = "#ce9178",
+	css_unit = "#b5cea8",
+	css_function = "#dcdcaa",
+	css_at_rule = "#c586c0",
 
-	-- Regex
-	regex = "#d16969", -- Red for regex
-	regex_special = "#d7ba7d", -- Gold for special regex chars
+	regex = "#d16969",
+	regex_special = "#d7ba7d",
 
-	-- Markdown
-	markdown_heading = "#569cd6", -- Blue for headings
-	markdown_code = "#ce9178", -- Orange for inline code
-	markdown_link = "#4ec9b0", -- Teal for links
+	markdown_heading = "#569cd6",
+	markdown_code = "#ce9178",
+	markdown_link = "#4ec9b0",
 
-	-- Special tokens
-	namespace = "#4ec9b0", -- Teal for namespaces
-	module = "#4ec9b0", -- Teal for modules
+	namespace = "#4ec9b0",
+	module = "#4ec9b0",
 
-	-- Diagnostics
 	error = "#f48771",
 	warning = "#cca700",
 	info = "#75beff",
@@ -131,11 +117,6 @@ local colors = {
 	git_change = "#e2c08d",
 	git_delete = "#c74e39",
 }
-
--- Helper function to set highlights
-local function hl(group, opts)
-	vim.api.nvim_set_hl(0, group, opts)
-end
 
 -- Editor UI
 hl("Normal", { fg = colors.fg, bg = colors.bg })
@@ -217,15 +198,13 @@ hl("Underlined", { fg = colors.variable, underline = true })
 hl("Ignore", { fg = colors.line_number })
 hl("Error", { fg = colors.error, bold = true })
 
--- Tree-sitter Highlighting (EXACT VS Code mapping)
-
--- Comments
 hl("@comment", { fg = colors.comment, italic = true })
 hl("@comment.documentation", { fg = colors.comment, italic = true })
 hl("@comment.warning", { fg = colors.special_comment, bold = true })
 hl("@comment.error", { fg = colors.error, bold = true })
+hl("@comment.todo", { fg = colors.special_comment })
+hl("@comment.note", { fg = colors.special_comment })
 
--- Constants
 hl("@constant", { fg = colors.constant })
 hl("@constant.builtin", { fg = colors.boolean })
 hl("@constant.macro", { fg = colors.constant })
@@ -251,15 +230,14 @@ hl("@function.method", { fg = colors.method })
 hl("@function.method.call", { fg = colors.method })
 hl("@method", { fg = colors.method })
 hl("@method.call", { fg = colors.method })
-hl("@constructor", { fg = colors.function_name }) -- Yellow for constructors like Column()
+hl("@constructor", { fg = colors.type })
 hl("@parameter", { fg = colors.parameter })
 hl("@parameter.reference", { fg = colors.parameter })
 
--- Keywords
 hl("@keyword", { fg = colors.keyword })
 hl("@keyword.coroutine", { fg = colors.keyword_function }) -- async = blue
 hl("@keyword.function", { fg = colors.keyword_function }) -- def, function = blue
-hl("@keyword.operator", { fg = colors.keyword })
+hl("@keyword.operator", { fg = colors.keyword_operator })
 hl("@keyword.return", { fg = colors.keyword_control })
 hl("@keyword.exception", { fg = colors.keyword })
 hl("@keyword.import", { fg = colors.keyword })
@@ -269,6 +247,19 @@ hl("@conditional", { fg = colors.keyword })
 hl("@repeat", { fg = colors.keyword })
 hl("@label", { fg = colors.label })
 hl("@exception", { fg = colors.keyword })
+hl("@keyword.directive", { fg = colors.keyword })
+hl("@keyword.directive.define", { fg = colors.keyword })
+
+hl("@keyword.imported.python", { fg = colors.keyword_function })
+hl("@keyword.function.python", { fg = colors.keyword_function })
+hl("@storageclass.python", { fg = colors.keyword_function })
+hl("@keyword.type", { fg = colors.keyword_function })
+hl("@keyword.module", { fg = colors.namespace })
+
+hl("@keyword.class", { fg = colors.keyword_function })
+hl("@function.imported", { fg = colors.function_name })
+hl("@function.call", { fg = colors.function_name })
+hl("@constructor.call", { fg = colors.type })
 
 -- Operators & Punctuation
 hl("@operator", { fg = colors.operator })
@@ -283,6 +274,7 @@ hl("@type.definition", { fg = colors.type })
 hl("@type.qualifier", { fg = colors.keyword_function }) -- class qualifier = blue
 hl("@storageclass", { fg = colors.keyword_function })
 hl("@namespace", { fg = colors.namespace })
+
 hl("@module", { fg = colors.module })
 hl("@module.builtin", { fg = colors.module })
 hl("@include", { fg = colors.keyword })
@@ -320,13 +312,14 @@ hl("@text.danger", { fg = colors.error })
 
 -- Tags (HTML/JSX/XML/Vue)
 hl("@tag", { fg = colors.tag })
+hl("@tag.tsx", { fg = colors.tag })
+hl("@tag.jsx", { fg = colors.tag })
 hl("@tag.builtin", { fg = colors.tag_builtin })
 hl("@tag.attribute", { fg = colors.tag_attribute })
+hl("@tag.attribute.tsx", { fg = colors.tag_attribute })
+hl("@tag.attribute.jsx", { fg = colors.tag_attribute })
 hl("@tag.delimiter", { fg = colors.tag_delimiter })
 
--- Language-Specific Overrides (CRITICAL FOR VS CODE MATCHING)
-
--- Python: The key to matching VS Code!
 -- In Python, 'class' and 'def' are NOT @keyword but @keyword.function in newer treesitter
 hl("@variable.builtin.python", { fg = colors.boolean }) -- self, cls = BLUE
 hl("@type.builtin.python", { fg = colors.type })
@@ -339,12 +332,6 @@ hl("@constructor.typescript", { fg = colors.type })
 hl("@keyword.function.javascript", { fg = colors.keyword_function })
 hl("@keyword.function.typescript", { fg = colors.keyword_function })
 hl("@type.builtin.typescript", { fg = colors.type_builtin })
-
--- JSX/TSX
-hl("@tag.tsx", { fg = colors.tag })
-hl("@tag.jsx", { fg = colors.tag })
-hl("@tag.attribute.tsx", { fg = colors.tag_attribute })
-hl("@tag.attribute.jsx", { fg = colors.tag_attribute })
 
 -- CSS/SCSS
 hl("@property.css", { fg = colors.css_property })
@@ -373,7 +360,6 @@ hl("@text.title.markdown", { fg = colors.markdown_heading, bold = true })
 hl("@text.literal.markdown", { fg = colors.markdown_code })
 hl("@text.uri.markdown", { fg = colors.markdown_link, underline = true })
 
--- LSP Semantic Tokens (These override Treesitter when LSP is active)
 hl("@lsp.type.class", { fg = colors.class })
 hl("@lsp.type.decorator", { fg = colors.class })
 hl("@lsp.type.annotation", { fg = colors.class })
@@ -392,13 +378,11 @@ hl("@lsp.type.typeParameter", { fg = colors.type })
 hl("@lsp.type.variable", { fg = colors.variable })
 hl("@lsp.type.keyword", { fg = colors.keyword })
 
--- LSP modifiers for built-in functions/types (CRITICAL for uuid4, Column, etc.)
 hl("@lsp.mod.defaultLibrary", { fg = colors.function_name })
 hl("@lsp.typemod.function.defaultLibrary", { fg = colors.function_name })
 hl("@lsp.typemod.class.defaultLibrary", { fg = colors.function_name })
 hl("@lsp.typemod.variable.defaultLibrary", { fg = colors.boolean })
 
--- Diagnostics
 hl("DiagnosticError", { fg = colors.error })
 hl("DiagnosticWarn", { fg = colors.warning })
 hl("DiagnosticInfo", { fg = colors.info })
@@ -416,7 +400,6 @@ hl("DiagnosticSignWarn", { fg = colors.warning })
 hl("DiagnosticSignInfo", { fg = colors.info })
 hl("DiagnosticSignHint", { fg = colors.hint })
 
--- LSP References
 hl("LspReferenceText", { bg = colors.bg_highlight })
 hl("LspReferenceRead", { bg = colors.bg_highlight })
 hl("LspReferenceWrite", { bg = colors.bg_highlight })
@@ -447,7 +430,6 @@ hl("GitSignsAddLn", { bg = colors.diff_add })
 hl("GitSignsChangeLn", { bg = colors.diff_change })
 hl("GitSignsDeleteLn", { bg = colors.diff_delete })
 
--- Telescope
 hl("TelescopeNormal", { fg = colors.fg, bg = colors.bg_dark })
 hl("TelescopeBorder", { fg = colors.border, bg = colors.bg_dark })
 hl("TelescopePromptNormal", { fg = colors.fg, bg = colors.bg_dark })
@@ -460,7 +442,6 @@ hl("TelescopeSelectionCaret", { fg = colors.function_name, bg = colors.bg_visual
 hl("TelescopeMultiSelection", { fg = colors.type, bg = colors.bg_visual })
 hl("TelescopeMatching", { fg = colors.function_name, bold = true })
 
--- NvimTree
 hl("NvimTreeNormal", { fg = colors.fg, bg = colors.bg })
 hl("NvimTreeFolderName", { fg = colors.type })
 hl("NvimTreeFolderIcon", { fg = colors.type })
@@ -478,14 +459,12 @@ hl("NvimTreeGitNew", { fg = colors.git_add })
 hl("NvimTreeGitDeleted", { fg = colors.git_delete })
 hl("NvimTreeIndentMarker", { fg = colors.border })
 
--- NeoTree
 hl("NeoTreeNormal", { fg = colors.fg, bg = colors.bg })
 hl("NeoTreeDirectoryName", { fg = colors.fg })
 hl("NeoTreeDirectoryIcon", { fg = colors.boolean })
 hl("NeoTreeOpenedFolderName", { fg = colors.type, bold = true })
 hl("NeoTreeEmptyFolderName", { fg = colors.comment })
 hl("NeoTreeRootName", { fg = colors.keyword, bold = true })
--- hl("NeoTreeFileNameOpened", { fg= colors.border })
 hl("NeoTreeSpecialFile", { fg = colors.warning, underline = true })
 hl("NeoTreeExecutable", { fg = colors.git_add, bold = true })
 hl("NeoTreeImageFile", { fg = colors.function_name })
@@ -497,7 +476,6 @@ hl("NeoTreeGitAdded", { fg = colors.git_add })
 hl("NeoTreeGitDeleted", { fg = colors.git_delete })
 hl("NeoTreeIndentMarker", { fg = colors.border })
 
--- Which-key
 hl("WhichKey", { fg = colors.function_name })
 hl("WhichKeyGroup", { fg = colors.keyword })
 hl("WhichKeyDesc", { fg = colors.fg })
@@ -505,39 +483,22 @@ hl("WhichKeySeparator", { fg = colors.comment })
 hl("WhichKeyFloat", { bg = colors.bg_dark })
 hl("WhichKeyBorder", { fg = colors.border, bg = colors.bg_dark })
 
--- IndentBlankline
 hl("IndentBlanklineChar", { fg = "#3b3b3b", nocombine = true })
 hl("IndentBlanklineContextChar", { fg = colors.border, nocombine = true })
 hl("IndentBlanklineContextStart", { underline = true, sp = colors.border })
 hl("IblIndent", { fg = "#3b3b3b", nocombine = true })
 hl("IblScope", { fg = colors.border, nocombine = true })
 
--- Noice
 hl("NoicePopup", { fg = colors.fg, bg = colors.bg_dark })
 hl("NoiceBorder", { fg = colors.border, bg = colors.bg_dark })
 
--- Notify
 hl("NotifyERRORBorder", { fg = colors.error })
 hl("NotifyWARNBorder", { fg = colors.warning })
 hl("NotifyINFOBorder", { fg = colors.info })
 
--- nvim-cmp
 hl("CmpItemAbbrMatch", { fg = colors.function_name, bold = true })
 hl("CmpItemKindFunction", { fg = colors.function_name })
 hl("CmpItemKindClass", { fg = colors.class })
-
--- Treesitter fallback highlights
-hl("@keyword.imported.python", { fg = colors.keyword_function })
-hl("@keyword.function.python", { fg = colors.keyword_function })
-hl("@storageclass.python", { fg = colors.keyword_function })
-
--- All the type keywords
-hl("@keyword.type", { fg = colors.keyword_function })
-
-hl("@keyword.class", { fg = colors.keyword_function })
-hl("@function.imported", { fg = colors.function_name })
-hl("@function.call", { fg = colors.function_name })
-hl("@constructor.call", { fg = colors.function_name })
 
 hl("DiagnosticUnnecessary", { fg = colors.unused_variable, italic = true, undercurl = false })
 hl("DiagnosticUnused", { fg = colors.unused_variable, italic = true })
@@ -546,24 +507,24 @@ hl("DiagnosticUnused", { fg = colors.unused_variable, italic = true })
 hl("SpecialComment", { fg = colors.special_comment, bold = true })
 hl("Directives", { fg = colors.keyword_function })
 
-local special_comments = {
-	"TODO",
-	"NOTE",
-	"FIXME",
-	"BUG",
-	"HACK",
-	"WARN",
-	"WARNING",
-	"PERF",
-	"OPTIMIZE",
-	"REVIEW",
-	"XXX",
-	"DEPRECATED",
-}
-
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 	pattern = "*",
 	callback = function()
+		local special_comments = {
+			"TODO",
+			"NOTE",
+			"FIXME",
+			"BUG",
+			"HACK",
+			"WARN",
+			"WARNING",
+			"PERF",
+			"OPTIMIZE",
+			"REVIEW",
+			"XXX",
+			"DEPRECATED",
+		}
+
 		local pattern = [[\v]] .. table.concat(special_comments, "|")
 		vim.fn.matchadd("SpecialComment", pattern)
 	end,
@@ -576,8 +537,6 @@ local directive_keywords = {
 	"mod",
 	"crate",
 	"library",
-	"part of",
-	"part",
 	"program",
 	"unit",
 	"implementation",
@@ -590,8 +549,41 @@ local directive_keywords = {
 
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 	pattern = "*",
-	callback = function()
-		local pattern = [[\v]] .. table.concat(directive_keywords, "|")
+	callback = function(ev)
+		local buf = ev.buf or vim.api.nvim_get_current_buf()
+		local ft = vim.bo[buf].filetype
+
+		-- Skip non-programming files
+		local skip_fts = {
+			"",
+			"text",
+			"markdown",
+			"html",
+			"css",
+			"scss",
+			"xml",
+			"json",
+			"yaml",
+			"toml",
+			"help",
+			"man",
+			"txt",
+			"conf",
+			"ini",
+		}
+
+		if vim.tbl_contains(skip_fts, ft) then
+			return
+		end
+
+		local has_parser = pcall(vim.treesitter.get_parser, buf, ft)
+		if not has_parser then
+			return
+		end
+
+		local keywords_pattern = table.concat(directive_keywords, "|")
+		local pattern = [[\v(["'`])@<!<(]] .. keywords_pattern .. [[)>(["'`])@!]]
+
 		vim.fn.matchadd("Directives", pattern)
 	end,
 })
