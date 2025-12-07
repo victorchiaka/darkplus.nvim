@@ -13,6 +13,7 @@ An exact replica of VS Code's Dark+ theme for Neovim with full Treesitter and LS
 ```lua
 return {
   "victorchiaka/darkplus.nvim",
+  version = "*", -- Optional: use latest stable release
   lazy = false,
   priority = 1000,
   config = function()
@@ -25,6 +26,7 @@ return {
 ```lua
 use {
   "victorchiaka/darkplus.nvim",
+  tag = "*", -- Optional: use latest stable release
   config = function()
     vim.cmd("colorscheme darkplus")
   end
