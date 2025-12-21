@@ -25,6 +25,8 @@ local colors = {
 	cursor_line = "#2a2d2e",
 	cursor = "#aeafad",
 
+	directive = "#569cd6",
+
 	line_number = "#858585",
 	line_number_active = "#c6c6c6",
 
@@ -63,7 +65,7 @@ local colors = {
 	property = "#9cdcfe",
 	field = "#9cdcfe",
 
-	unused_variable = "#546d7a",
+	unused_variable = "#317da8",
 
 	constant = "#4fc1ff",
 	enum_member = "#4fc1ff",
@@ -78,6 +80,7 @@ local colors = {
 
 	-- Markup (HTML/JSX/XML/Vue)
 	tag = "#569cd6", -- Blue for tag names (<div>, <template>)
+	fc_tag = "#4ec9b0",
 	tag_builtin = "#569cd6",
 	tag_attribute = "#9cdcfe",
 	tag_delimiter = "#808080",
@@ -277,8 +280,11 @@ hl("@namespace", { fg = colors.namespace })
 
 hl("@module", { fg = colors.module })
 hl("@module.builtin", { fg = colors.module })
-hl("@include", { fg = colors.keyword })
-hl("@preproc", { fg = colors.keyword })
+
+hl("@keyword.module", { fg = colors.keyword_function })
+
+-- hl("@include", { fg = colors.keyword })
+-- hl("@preproc", { fg = colors.keyword })
 
 -- Variables & Properties
 hl("@variable", { fg = colors.variable })
@@ -312,8 +318,8 @@ hl("@text.danger", { fg = colors.error })
 
 -- Tags (HTML/JSX/XML/Vue)
 hl("@tag", { fg = colors.tag })
-hl("@tag.tsx", { fg = colors.tag })
-hl("@tag.jsx", { fg = colors.tag })
+hl("@tag.tsx", { fg = colors.fc_tag })
+hl("@tag.jsx", { fg = colors.fc_tag })
 hl("@tag.builtin", { fg = colors.tag_builtin })
 hl("@tag.attribute", { fg = colors.tag_attribute })
 hl("@tag.attribute.tsx", { fg = colors.tag_attribute })
@@ -500,12 +506,9 @@ hl("CmpItemAbbrMatch", { fg = colors.function_name, bold = true })
 hl("CmpItemKindFunction", { fg = colors.function_name })
 hl("CmpItemKindClass", { fg = colors.class })
 
-hl("DiagnosticUnnecessary", { fg = colors.unused_variable, italic = true, undercurl = false })
-hl("DiagnosticUnused", { fg = colors.unused_variable, italic = true })
+hl("DiagnosticUnnecessary", { fg = colors.unused_variable, italic = false, undercurl = true })
 
--- Custom
 hl("SpecialComment", { fg = colors.special_comment, bold = true })
-hl("Directives", { fg = colors.keyword_function })
 
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 	pattern = "*",
@@ -530,6 +533,7 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 	end,
 })
 
+-- Define your directive keywords
 local directive_keywords = {
 	"package",
 	"namespace",
@@ -547,43 +551,83 @@ local directive_keywords = {
 	"macro",
 }
 
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-	pattern = "*",
-	callback = function(ev)
-		local buf = ev.buf or vim.api.nvim_get_current_buf()
-		local ft = vim.bo[buf].filetype
+-- Convert to a set for faster lookup
+local directive_set = {}
+for _, kw in ipairs(directive_keywords) do
+	directive_set[kw] = true
+end
 
-		-- Skip non-programming files
-		local skip_fts = {
-			"",
-			"text",
-			"markdown",
-			"html",
-			"css",
-			"scss",
-			"xml",
-			"json",
-			"yaml",
-			"toml",
-			"help",
-			"man",
-			"txt",
-			"conf",
-			"ini",
-		}
+local ns = vim.api.nvim_create_namespace("directive_keywords")
 
-		if vim.tbl_contains(skip_fts, ft) then
-			return
+local function highlight_directive_keywords()
+	local bufnr = vim.api.nvim_get_current_buf()
+
+	local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+	if not ok or not parser then
+		return
+	end
+
+	local ok_parse, trees = pcall(parser.parse, parser)
+	if not ok_parse or not trees or #trees == 0 then
+		return
+	end
+
+	local tree = trees[1]
+	local root = tree:root()
+	local lang = parser:lang()
+
+	vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+
+	local ok_query, query = pcall(vim.treesitter.query.get, lang, "highlights")
+	if not ok_query or not query then
+		return
+	end
+
+	for id, node in query:iter_captures(root, bufnr, 0, -1) do
+		local capture_name = query.captures[id]
+
+		-- Check if this capture starts with "keyword"
+		if capture_name and capture_name:match("^keyword") then
+			local ok_text, text = pcall(vim.treesitter.get_node_text, node, bufnr)
+
+			if ok_text and text then
+				-- Trim whitespace and get just the first word
+				text = text:match("^%s*(%S+)")
+
+				-- Check if the actual text matches any of our directive keywords
+				if text and directive_set[text] then
+					local start_row, start_col, end_row, end_col = node:range()
+
+					pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, start_row, start_col, {
+						end_row = end_row,
+						end_col = end_col,
+						hl_group = "DirectiveKeyword",
+						priority = 150, -- Higher priority than default treesitter (100)
+					})
+				end
+			end
 		end
+	end
+end
 
-		local has_parser = pcall(vim.treesitter.get_parser, buf, ft)
-		if not has_parser then
-			return
-		end
-
-		local keywords_pattern = table.concat(directive_keywords, "|")
-		local pattern = [[\v(["'`])@<!<(]] .. keywords_pattern .. [[)>(["'`])@!]]
-
-		vim.fn.matchadd("Directives", pattern)
-	end,
+vim.api.nvim_set_hl(0, "DirectiveKeyword", {
+	fg = colors.directive,
+	bold = true,
 })
+
+-- Auto-trigger on buffer events with debouncing
+local timer = nil
+local function debounced_highlight()
+	if timer then
+		timer:stop()
+	end
+	timer = vim.defer_fn(function()
+		highlight_directive_keywords()
+		timer = nil
+	end, 10)
+end
+
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, { callback = highlight_directive_keywords })
+vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, { callback = debounced_highlight })
+vim.api.nvim_create_user_command("HighlightDirectives", highlight_directive_keywords, {})
+vim.defer_fn(highlight_directive_keywords, 100)
