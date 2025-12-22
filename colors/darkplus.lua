@@ -631,3 +631,13 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, { callback = highlig
 vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, { callback = debounced_highlight })
 vim.api.nvim_create_user_command("HighlightDirectives", highlight_directive_keywords, {})
 vim.defer_fn(highlight_directive_keywords, 100)
+
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+	pattern = { "*.java" },
+	callback = function()
+		hl("@keyword.import", { fg = colors.directive })
+
+		-- for the margenta "new keyword" but we prefer it as we have here
+		-- hl("@keyword.operator", { fg = colors.keyword })
+	end,
+})
